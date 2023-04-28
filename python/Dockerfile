@@ -1,4 +1,4 @@
-FROM --platform=arm64 python:3.11
+FROM --platform=arm64 python:3.10
 
 RUN apt-get -y update
 
