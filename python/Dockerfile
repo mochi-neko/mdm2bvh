@@ -6,8 +6,11 @@ WORKDIR /app/mdm2bvh
 
 RUN pip install poetry
 
-COPY /mdm2bvh/pyproject.toml /mdm2bvh/poetry.lock ./
+COPY /mdm2bvh/pyproject.toml ./
+COPY /mdm2bvh/poetry.lock ./
+COPY /mdm2bvh/src ./
+COPY /mdm2bvh/README.md ./
 
-RUN poetry install --no-root
+RUN poetry install
 
 COPY . .
