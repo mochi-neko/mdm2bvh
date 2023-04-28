@@ -10,7 +10,7 @@ class StructureInfo:
             index_to_name_map: Dict[int, str],
             name_to_children_map: Dict[str, List[str]],
             rotation_order: str
-    ) -> None:
+    ):
         self.root_name = root_name
         self.root_channels = root_channels
         self.joint_channels = joint_channels
