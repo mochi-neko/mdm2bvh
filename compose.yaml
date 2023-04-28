@@ -1,0 +1,10 @@
+services:
+  python:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    tty: true
+    ports:
+      - 8000:8000
+    volumes:
+      - ./python:/app
