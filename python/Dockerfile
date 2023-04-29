@@ -8,9 +8,9 @@ RUN pip install poetry
 
 COPY /mdm2bvh/pyproject.toml ./
 COPY /mdm2bvh/poetry.lock ./
-COPY /mdm2bvh/src ./
+COPY /mdm2bvh/mdm2bvh ./
 COPY /mdm2bvh/README.md ./
 
-RUN poetry install --no-root
+RUN poetry install
 
 COPY . .
