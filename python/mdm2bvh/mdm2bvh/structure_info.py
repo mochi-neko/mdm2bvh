@@ -9,7 +9,8 @@ class StructureInfo:
             joint_channels: List[str],
             index_to_name_map: Dict[int, str],
             name_to_children_map: Dict[str, List[str]],
-            rotation_order: str
+            rotation_order: str,
+            scale: float,
     ):
         self.root_name = root_name
         self.root_channels = root_channels
@@ -17,6 +18,7 @@ class StructureInfo:
         self.index_to_name_map = index_to_name_map
         self.name_to_children_map = name_to_children_map
         self.rotation_order = rotation_order
+        self.scale = scale
 
 
 def default_structure_info() -> StructureInfo:
@@ -73,4 +75,5 @@ def default_structure_info() -> StructureInfo:
             "RightToe": [],
         },
         rotation_order="ZYX",
+        scale=1.0,
     )

@@ -7,12 +7,13 @@ from scipy.spatial.transform import Rotation as R
 def calculate_root_offset(
         npy_motion: List[List[List[float]]],
         root_index: int,
+        scale: float
 ) -> List[float]:
     root = npy_motion[root_index]
     return [
-        root[0][0],  # World X position of root at 0 frame
-        root[1][0],  # World Y position of root at 0 frame
-        root[2][0],  # World Z position of root at 0 frame
+        root[0][0] * scale,  # World X position of root at 0 frame
+        root[1][0] * scale,  # World Y position of root at 0 frame
+        root[2][0] * scale,  # World Z position of root at 0 frame
     ]
 
 
@@ -20,13 +21,14 @@ def calculate_joint_offset(
         npy_motion: List[List[List[float]]],
         joint_index: int,
         parent_index: int,
+        scale: float
 ) -> List[float]:
     joint = npy_motion[joint_index]
     parent = npy_motion[parent_index]
     return [
-        joint[0][0] - parent[0][0],  # Local X position of joint at 0 frame
-        joint[1][0] - parent[1][0],  # Local Y position of joint at 0 frame
-        joint[2][0] - parent[2][0],  # Local Z position of joint at 0 frame
+        (joint[0][0] - parent[0][0]) * scale,  # Local X position of joint at 0 frame
+        (joint[1][0] - parent[1][0]) * scale,  # Local Y position of joint at 0 frame
+        (joint[2][0] - parent[2][0]) * scale,  # Local Z position of joint at 0 frame
     ]
 
 
