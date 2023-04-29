@@ -98,9 +98,10 @@ def position_to_euler_angles(
     # Convert angles to euler angles with rotation order
     rotation = R.from_euler(rotation_order, [yaw, pitch, 0])
     euler_angles = rotation.as_euler(rotation_order)
+    euler_angles_degrees = np.degrees(euler_angles)
 
     return [
-        euler_angles[0],
-        euler_angles[1],
-        euler_angles[2]
+        euler_angles_degrees[0],
+        euler_angles_degrees[1],
+        euler_angles_degrees[2]
     ]
