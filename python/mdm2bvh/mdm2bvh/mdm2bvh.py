@@ -34,10 +34,9 @@ def find_parent_index(
 
 
 def create_skeleton(
-        npy: Dict,
+        npy_motion: List[List[List[float]]],
         info: StructureInfo
 ) -> List[Bone]:
-    npy_motion = npy["motion"][0]
     bones = []
     for joint_index in range(len(npy_motion)):
         name = info.index_to_name_map[joint_index]
@@ -71,26 +70,21 @@ def create_skeleton(
     return bones
 
 
-def mdm2bvh(
+def convert_npy_to_bvh(
         npy_file: str,
         output_file: str,
         seconds_per_frame: float,
+        repetition_index: int = 0,
         info: StructureInfo = default_structure_info(),
 ):
     data = np.load(npy_file, allow_pickle=True)
     data_dictionary = dict(enumerate(data.flatten()))[0]
     data_dictionary["motion"] = data_dictionary["motion"].tolist()
-    skeleton = create_skeleton(data_dictionary, info)
+    npy_motion = data_dictionary["motion"][repetition_index]
+    skeleton = create_skeleton(npy_motion, info)
     write_bvh(
         output_file=output_file,
         skeleton=skeleton,
         number_of_frames=len(data_dictionary["motion"][0][0][0]),
         seconds_per_frame=seconds_per_frame,
     )
-
-
-if __name__ == '__main__':
-    source_npy_file = 'results.npy'
-    output_bvh_file = 'results.bvh'
-    seconds_per_frame = 1 / 30
-    mdm2bvh(source_npy_file, output_bvh_file, seconds_per_frame)

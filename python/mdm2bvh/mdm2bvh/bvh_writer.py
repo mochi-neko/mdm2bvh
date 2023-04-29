@@ -45,13 +45,3 @@ def write_bvh(
                     frame_data.append(channel)
             frame_str = " ".join(map(str, frame_data))
             f.write("{}\n".format(frame_str))
-
-
-if __name__ == '__main__':
-    output_bvh_file = '../sample.bvh'
-    number_of_frames = 2
-    seconds_per_frame = 1.0 / 30.0  # = 30 FPS
-    from mdm2bvh.bone import dummy_skeleton
-    skeleton = dummy_skeleton()
-
-    write_bvh(output_bvh_file, skeleton, number_of_frames, seconds_per_frame)

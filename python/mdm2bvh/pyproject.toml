@@ -13,6 +13,9 @@ numpy = "1.21.5"
 scipy = "^1.10.1"
 
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
