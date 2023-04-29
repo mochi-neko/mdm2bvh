@@ -1,11 +1,11 @@
 from typing import List, Dict, Optional
 import numpy as np
 
-from src.mdm2bvh.bone import Bone
-from src.mdm2bvh.bvh_writer import write_bvh
-from src.mdm2bvh.motion_converter import calculate_root_offset, calculate_joint_offset, calculate_joint_motions, \
+from mdm2bvh.bone import Bone
+from mdm2bvh.bvh_writer import write_bvh
+from mdm2bvh.motion_converter import calculate_root_offset, calculate_joint_offset, calculate_joint_motions, \
     calculate_root_motions
-from src.mdm2bvh.structure_info import StructureInfo, default_structure_info
+from mdm2bvh.structure_info import StructureInfo, default_structure_info
 
 
 def find_parent_name(

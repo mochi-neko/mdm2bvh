@@ -1,6 +1,6 @@
 from typing import List, Any
 
-from src.mdm2bvh.bone import Bone, find_bone
+from mdm2bvh.bone import Bone, find_bone
 
 
 def write_bone(bone: Bone, skeleton: List[Bone], f: Any, depth: int) -> None:
@@ -48,10 +48,10 @@ def write_bvh(
 
 
 if __name__ == '__main__':
-    output_bvh_file = '../../sample.bvh'
+    output_bvh_file = '../sample.bvh'
     number_of_frames = 2
     seconds_per_frame = 1.0 / 30.0  # = 30 FPS
-    from src.mdm2bvh.bone import dummy_skeleton
+    from mdm2bvh.bone import dummy_skeleton
     skeleton = dummy_skeleton()
 
     write_bvh(output_bvh_file, skeleton, number_of_frames, seconds_per_frame)
