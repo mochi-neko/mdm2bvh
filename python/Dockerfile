@@ -11,6 +11,6 @@ COPY /mdm2bvh/poetry.lock ./
 COPY /mdm2bvh/src ./
 COPY /mdm2bvh/README.md ./
 
-RUN poetry install
+RUN poetry install --no-root
 
 COPY . .

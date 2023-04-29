@@ -6,6 +6,9 @@ authors = ["Mochineko <t.o.e.4315@gmail.com>"]
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/mochi-neko/mdm2bvh"
+packages = [
+    { include = "mdm2bvh", from = "src" },
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
