@@ -24,8 +24,8 @@ class StructureInfo:
 def default_structure_info() -> StructureInfo:
     return StructureInfo(
         root_name="Hips",
-        root_channels=["Xposition", "Yposition", "Zposition", "Zrotation", "Yrotation", "Xrotation"],
-        joint_channels=["Zrotation", "Yrotation", "Xrotation"],
+        root_channels=["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"],
+        joint_channels=["Zrotation", "Xrotation", "Yrotation"],
         index_to_name_map={
             0: "Hips",
             1: "LeftUpperLeg",
@@ -74,6 +74,6 @@ def default_structure_info() -> StructureInfo:
             "RightFoot": ["RightToe"],
             "RightToe": [],
         },
-        rotation_order="ZYX",
-        scale=1.0,
+        rotation_order="ZXY",
+        scale=100.0,
     )
