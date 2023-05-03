@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 class StructureInfo:
@@ -9,6 +9,7 @@ class StructureInfo:
             joint_channels: List[str],
             index_to_name_map: Dict[int, str],
             name_to_children_map: Dict[str, List[str]],
+            root_rotation_standard_joint_name: str,
             rotation_order: str,
             scale: float,
     ):
@@ -17,8 +18,23 @@ class StructureInfo:
         self.joint_channels = joint_channels
         self.index_to_name_map = index_to_name_map
         self.name_to_children_map = name_to_children_map
+        self.root_rotation_standard_joint_name = root_rotation_standard_joint_name
         self.rotation_order = rotation_order
         self.scale = scale
+
+        # Build name to index map
+        self.name_to_index_map = {name: index for index, name in self.index_to_name_map.items()}
+        # Find root index
+        self.root_index = self.name_to_index_map[root_name]
+        # Find root rotation standard joint index
+        self.root_rotation_standard_joint_index = self.name_to_index_map[root_rotation_standard_joint_name]
+        # Build children index to parent index map
+        self.index_to_parent_index_map = {}
+        for parent_name, children in self.name_to_children_map.items():
+            parent_index = self.name_to_index_map[parent_name]
+            for child_name in children:
+                child_index = self.name_to_index_map[child_name]
+                self.index_to_parent_index_map[child_index] = parent_index
 
 
 def default_structure_info() -> StructureInfo:
@@ -51,7 +67,7 @@ def default_structure_info() -> StructureInfo:
             21: "RightHand",
         },
         name_to_children_map={
-            "Hips": ["LeftUpperLeg", "RightUpperLeg", "Spine"],
+            "Hips": ["Spine", "LeftUpperLeg", "RightUpperLeg"],
             "Spine": ["Chest"],
             "Chest": ["UpperChest"],
             "UpperChest": ["Neck", "LeftShoulder", "RightShoulder"],
@@ -74,6 +90,7 @@ def default_structure_info() -> StructureInfo:
             "RightFoot": ["RightToe"],
             "RightToe": [],
         },
+        root_rotation_standard_joint_name="Spine",
         rotation_order="ZXY",
         scale=100.0,
     )

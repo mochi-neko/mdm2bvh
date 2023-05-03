@@ -1,13 +1,14 @@
 from typing import List
-
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+
+from mdm2bvh.bone import Bone
 
 
 def calculate_root_offset(
         npy_motion: List[List[List[float]]],
         root_index: int,
-        scale: float
+        scale: float,
 ) -> List[float]:
     root = npy_motion[root_index]
     return [
@@ -21,7 +22,7 @@ def calculate_joint_offset(
         npy_motion: List[List[List[float]]],
         joint_index: int,
         parent_index: int,
-        scale: float
+        scale: float,
 ) -> List[float]:
     joint = npy_motion[joint_index]
     parent = npy_motion[parent_index]
@@ -32,76 +33,86 @@ def calculate_joint_offset(
     ]
 
 
-def calculate_root_motions(
-        npy_motion: List[List[List[float]]],
-        root_index: int,
-        rotation_order: str
-) -> List[List[float]]:
-    motions = []
-    root = npy_motion[root_index]
-    number_of_frames = len(npy_motion[0][0])
-    for frame in range(number_of_frames):
-        root_position = [root[0][frame], root[1][frame], root[2][frame]]
-        euler_angles = position_to_euler_angles(
-            parent_position=[0, 0, 0],
-            child_position=root_position,
-            rotation_order=rotation_order
-        )
-        motions.append(
-            [
-                root_position[0],  # X position at frame
-                root_position[1],  # Y position at frame
-                root_position[2],  # Z position at frame
-                euler_angles[0],  # first rotation at frame
-                euler_angles[1],  # second rotation at frame
-                euler_angles[2],  # third rotation at frame
-            ]
-        )
-    return motions
-
-
-def calculate_joint_motions(
-        npy_motion: List[List[List[float]]],
-        joint_index: int,
-        parent_index: int,
-        rotation_order='ZYX'
-) -> List[List[float]]:
-    motions = []
-    joint = npy_motion[joint_index]
-    parent = npy_motion[parent_index]
-    number_of_frames = len(npy_motion[0][0])
-    for frame in range(number_of_frames):
-        motions.append(
-            position_to_euler_angles(
-                parent_position=[parent[0][frame], parent[1][frame], parent[2][frame]],
-                child_position=[joint[0][frame], joint[1][frame], joint[2][frame]],
-                rotation_order=rotation_order
-            ))
-    return motions
-
-
-def position_to_euler_angles(
-        parent_position: List[float],
-        child_position: List[float],
-        rotation_order="ZYX"
+def calculate_root_motion(
+        root: Bone,
+        root_position: List[float],
+        root_direction: List[float],
+        rotation_order: str,
 ) -> List[float]:
-    # Calculate direction vector from parent to child
-    vec1 = np.array(parent_position)
-    vec2 = np.array(child_position)
-    vec = vec2 - vec1
-    vec = vec / np.linalg.norm(vec)
+    # Calculate root rotation
+    euler_angles = from_to_rotation_euler_angles(
+        from_direction=[0, 1, 0],  # World up direction
+        to_direction=root_direction,
+        rotation_order=rotation_order
+    )
 
-    # Calculate angles from direction vector
-    yaw = np.arctan2(vec[1], vec[0])
-    pitch = np.arctan2(-vec[2], np.sqrt(vec[0] ** 2 + vec[1] ** 2))
+    # Write motion frame
+    root.motion_data.append([
+        root_position[0],
+        root_position[1],
+        root_position[2],
+        euler_angles[0],
+        euler_angles[1],
+        euler_angles[2],
+    ])
 
-    # Convert angles to euler angles with rotation order
-    rotation = R.from_euler(rotation_order, [yaw, pitch, 0])
-    euler_angles = rotation.as_euler(rotation_order)
-    euler_angles_degrees = np.degrees(euler_angles)
+    return root_direction
+
+
+def calculate_joint_motion(
+        joint: Bone,
+        joint_position: List[float],
+        parent_position: List[float],
+        parent_direction: List[float],
+        rotation_order: str,
+) -> List[float]:
+    # Calculate joint direction
+    joint_direction = [
+        joint_position[0] - parent_position[0],
+        joint_position[1] - parent_position[1],
+        joint_position[2] - parent_position[2],
+    ]
+
+    # Calculate joint rotation from parent direction
+    euler_angles = from_to_rotation_euler_angles(
+        from_direction=parent_direction,
+        to_direction=joint_direction,
+        rotation_order=rotation_order
+    )
+
+    # Write motion frame
+    joint.motion_data.append([
+        euler_angles[0],
+        euler_angles[1],
+        euler_angles[2],
+    ])
+
+    return joint_direction
+
+
+def from_to_rotation_euler_angles(
+        from_direction: List[float],
+        to_direction: List[float],
+        rotation_order: str,
+) -> List[float]:
+    # Calculate normalized directions
+    from_vec = np.array(from_direction)
+    from_vec = from_vec / np.linalg.norm(from_vec)
+    to_vec = np.array(to_direction)
+    to_vec = to_vec / np.linalg.norm(to_vec)
+
+    # Calculate angles from direction vectors
+    rotation_axis = np.cross(from_vec, to_vec)
+    rotation_angle = np.arccos(np.dot(from_vec, to_vec))  # dot = cos -> arccos(dot) = arccos(cos) = angle
+
+    # Calculate rotation matrix
+    rotation = R.from_rotvec(rotation_axis * rotation_angle)
+
+    # Convert to euler angles with rotation order
+    euler_angles = rotation.as_euler(rotation_order, degrees=True)
 
     return [
-        euler_angles_degrees[0],
-        euler_angles_degrees[1],
-        euler_angles_degrees[2]
+        euler_angles[0],
+        euler_angles[1],
+        euler_angles[2],
     ]

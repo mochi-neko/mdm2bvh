@@ -19,14 +19,14 @@ class Bone:
         self.motion_data = motion_data
 
 
-def find_bone(skeleton: List[Bone], name: str) -> Optional[int]:
-    for index, bone in enumerate(skeleton):
+def find_bone(hierarchy: List[Bone], name: str) -> Optional[int]:
+    for index, bone in enumerate(hierarchy):
         if bone.name == name:
             return index
     return None
 
 
-def dummy_skeleton() -> List[Bone]:
+def dummy_hierarchy() -> List[Bone]:
     return [
         Bone(
             name="Hips",

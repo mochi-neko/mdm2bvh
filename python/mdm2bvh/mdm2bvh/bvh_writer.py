@@ -3,7 +3,12 @@ from typing import List, Any
 from mdm2bvh.bone import Bone, find_bone
 
 
-def write_bone(bone: Bone, skeleton: List[Bone], f: Any, depth: int) -> None:
+def write_bone(
+        bone: Bone,
+        skeleton: List[Bone],
+        f: Any,
+        depth: int
+) -> None:
     indent = '\t' * depth
     f.write(indent + ("ROOT {}\n".format(bone.name) if bone.is_root else "JOINT {}\n".format(bone.name)))
     f.write(indent + "{\n")
@@ -24,24 +29,24 @@ def write_bone(bone: Bone, skeleton: List[Bone], f: Any, depth: int) -> None:
 
 def write_bvh(
         output_file: str,
-        skeleton: List[Bone],
+        hierarchy: List[Bone],
         number_of_frames: int,
         seconds_per_frame: float,
 ) -> None:
     with open(output_file, 'w') as f:
         # Write HIERARCHY
         f.write("HIERARCHY\n")
-        write_bone(skeleton[0], skeleton, f, 0)
+        write_bone(hierarchy[0], hierarchy, f, 0)
 
         # Write MOTION
         f.write("MOTION\n")
         f.write("Frames: {}\n".format(number_of_frames))
         f.write("Frame Time: {}\n".format(seconds_per_frame))
 
-        for frame_idx in range(number_of_frames):
+        for frame_index in range(number_of_frames):
             frame_data = []
-            for bone in skeleton:
-                for channel in bone.motion_data[frame_idx]:
+            for bone in hierarchy:
+                for channel in bone.motion_data[frame_index]:
                     frame_data.append(channel)
             frame_str = " ".join(map(str, frame_data))
             f.write("{}\n".format(frame_str))

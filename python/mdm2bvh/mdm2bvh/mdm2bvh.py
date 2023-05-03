@@ -1,39 +1,14 @@
-from typing import List, Dict, Optional
+from typing import List
 import numpy as np
 
 from mdm2bvh.bone import Bone
 from mdm2bvh.bvh_writer import write_bvh
-from mdm2bvh.motion_converter import calculate_root_offset, calculate_joint_offset, calculate_joint_motions, \
-    calculate_root_motions
+from mdm2bvh.motion_converter import calculate_root_offset, calculate_joint_offset, calculate_root_motion, \
+    calculate_joint_motion
 from mdm2bvh.structure_info import StructureInfo, default_structure_info
 
 
-def find_parent_name(
-        name_to_children_map: Dict[str, List[str]],
-        name: str,
-) -> Optional[str]:
-    for parent_name, children in name_to_children_map.items():
-        if name in children:
-            return parent_name
-    return None
-
-
-def find_parent_index(
-        index_to_name_map: Dict[int, str],
-        name_to_children_map: Dict[str, List[str]],
-        index: int,
-) -> Optional[int]:
-    name = index_to_name_map[index]
-    parent_name = find_parent_name(name_to_children_map, name)
-    if parent_name is None:
-        return None
-    for parent_index, parent_name in index_to_name_map.items():
-        if parent_name == parent_name:
-            return parent_index
-    return None
-
-
-def create_skeleton(
+def create_hierarchy(
         npy_motion: List[List[List[float]]],
         info: StructureInfo
 ) -> List[Bone]:
@@ -44,30 +19,100 @@ def create_skeleton(
             bones.append(Bone(
                 name=name,
                 is_root=True,
-                offset=calculate_root_offset(npy_motion, joint_index),
+                offset=calculate_root_offset(npy_motion, joint_index, info.scale),
                 channels=info.root_channels,
                 children=info.name_to_children_map[name],
-                motion_data=calculate_root_motions(
-                    npy_motion,
-                    joint_index,
-                    info.rotation_order),
+                motion_data=[],
             ))
         else:
-            parent_index = find_parent_index(info.index_to_name_map, info.name_to_children_map, joint_index)
+            parent_index = info.index_to_parent_index_map[joint_index]
             bones.append(Bone(
                 name=name,
                 is_root=False,
-                offset=calculate_joint_offset(npy_motion, joint_index, parent_index),
+                offset=calculate_joint_offset(npy_motion, joint_index, parent_index, info.scale),
                 channels=info.joint_channels,
                 children=info.name_to_children_map[name],
-                motion_data=calculate_joint_motions(
-                    npy_motion,
-                    joint_index,
-                    parent_index,
-                    info.rotation_order),
+                motion_data=[],
             ))
 
     return bones
+
+
+def calculate_motions(
+        npy_motion: List[List[List[float]]],
+        hierarchy: List[Bone],
+        info: StructureInfo,
+):
+    root_index = info.root_index
+    root = hierarchy[info.root_index]
+    standard_index = info.root_rotation_standard_joint_index
+    for frame_index in range(len(npy_motion[0][0])):
+        root_position = [
+            npy_motion[root_index][0][frame_index],
+            npy_motion[root_index][1][frame_index],
+            npy_motion[root_index][2][frame_index],
+        ]
+        # NOTE: Root direction is calculated as relative direction for standard joint
+        # then standard joint cannot rotate for root
+        root_direction = [
+            npy_motion[standard_index][0][frame_index] - root_position[0],
+            npy_motion[standard_index][1][frame_index] - root_position[1],
+            npy_motion[standard_index][2][frame_index] - root_position[2],
+        ]
+        calculate_root_motion(
+            root,
+            root_position,
+            root_direction,
+            info.rotation_order,
+        )
+        for child in root.children:
+            calculate_motion_recursively(
+                npy_motion,
+                hierarchy,
+                info,
+                joint_index=info.name_to_index_map[child],
+                parent_position=root_position,
+                parent_direction=root_direction,
+                frame_index=frame_index,
+            )
+
+
+def calculate_motion_recursively(
+        npy_motion: List[List[List[float]]],
+        hierarchy: List[Bone],
+        info: StructureInfo,
+        joint_index: int,
+        parent_position: List[float],
+        parent_direction: List[float],
+        frame_index: int,
+):
+    joint = hierarchy[joint_index]
+    joint_motion = npy_motion[joint_index]
+    joint_position = [
+        joint_motion[0][frame_index],
+        joint_motion[1][frame_index],
+        joint_motion[2][frame_index],
+    ]
+
+    joint_direction = calculate_joint_motion(
+        joint,
+        joint_position,
+        parent_position,
+        parent_direction,
+        info.rotation_order,
+    )
+
+    # Recursion into children
+    for child in joint.children:
+        calculate_motion_recursively(
+            npy_motion,
+            hierarchy,
+            info,
+            info.name_to_index_map[child],
+            joint_position,
+            joint_direction,
+            frame_index,
+        )
 
 
 def convert_npy_to_bvh(
@@ -81,10 +126,11 @@ def convert_npy_to_bvh(
     data_dictionary = dict(enumerate(data.flatten()))[0]
     data_dictionary["motion"] = data_dictionary["motion"].tolist()
     npy_motion = data_dictionary["motion"][repetition_index]
-    skeleton = create_skeleton(npy_motion, info)
+    hierarchy = create_hierarchy(npy_motion, info)
+    calculate_motions(npy_motion, hierarchy, info)
     write_bvh(
         output_file=output_file,
-        skeleton=skeleton,
+        hierarchy=hierarchy,
         number_of_frames=len(data_dictionary["motion"][0][0][0]),
         seconds_per_frame=seconds_per_frame,
     )
